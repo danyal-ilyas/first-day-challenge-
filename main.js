@@ -34,6 +34,22 @@ function download(filename, text) {
     document.body.removeChild(element);
 }
 
+function display_albums(country_name, albums) {
+
+    var table = '<div><h3>'+country_name+'</h3><table border="2">';
+    table += '<tr><th>ID</th><th>Name</th><th>Release Date</th></tr>';
+    albums.forEach((albums, index) => {
+        table = table + '<tr>';
+        table = table + '<td>'+ albums.name+'</td>';
+        table = table + '<td>'+ albums.artist+'</td>';
+        table = table + '<td>'+ albums["release date"]+'</td>';
+        table += '</tr>';
+    });
+    table += "</table></div>";
+    document.getElementById("countries").innerHTML += table;
+
+}
+
 async function get_albums(country_code, token) {
     // Use the generated token to send a get request to spotify's new releases api
     const playlist_result = await fetch('https://api.spotify.com/v1/browse/new-releases?country=' + country_code + '&limit=10', {
@@ -44,8 +60,12 @@ async function get_albums(country_code, token) {
     // Get json representation of the response sent back, wait for the promise to resolve then move on
     const album_data = await playlist_result.json();
 
-    return album_data.albums.items
-
+    var albums = album_data.albums.items
+    var trimmed_albums = []
+    for (var i = 0; i < 10; i++) {
+        trimmed_albums.push({ "name": albums[i].name, "artist": albums[i].artists[0].name, "release date": albums[i].release_date })
+    }
+    return trimmed_albums
 }
 
 
@@ -116,26 +136,11 @@ window.onload = async function () {
         var pakistan_albums = await get_albums("PK", token);
         var france_albums = await get_albums("FR", token);
 
-        var canada_names = [];
-        var pakistan_names = [];
-        var france_names = [];
+        document.getElementById("countries").innerHTML = ""
 
-        for (var i = 0; i < 10; i++) {
-            canada_names.push({ "name": canada_albums[i].name, "artist": canada_albums[i].artists[0].name, "release date": canada_albums[i].release_date })
-        }
-
-        let table = '<table border="2">';
-        table += '<tr><th>ID</th><th>Name</th><th>Rank</th></tr>';
-        canada_names.forEach((canada_names, index) => {
-            console.log(canada_names.name)
-            table = table + '<tr>';
-            table = table + '<td>'+ canada_names.name+'</td>';
-            table = table + '<td>'+ canada_names.artist+'</td>';
-            table = table + '<td>'+ canada_names["release date"]+'</td>';
-            table += '</tr>';
-        });
-        table += "</table>";
-        document.getElementById("movies-list").innerHTML += table;
+       display_albums("Canada", canada_albums)
+       display_albums("Pakistan", pakistan_albums)
+       display_albums("France", france_albums)
 
 
     }
