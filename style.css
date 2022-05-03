@@ -1,4 +1,5 @@
-td, th {
+td,
+th {
     border: 1px solid;
 }
 
@@ -7,4 +8,3 @@ td, th {
     margin-right: auto;
     width: 40%;
 }
-
