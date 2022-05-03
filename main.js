@@ -1,20 +1,17 @@
 window.onload = function () {
 
     // Select the button
-    form = document.getElementById("title");
-
-
-    // source: https://developer.spotify.com/documentation/general/guides/authorization/client-credentials/
-    // alternate source: https://www.youtube.com/watch?v=SbelQW2JaDQ
-    var client_id = '257f4d383a25443a8aa392ed9c24fc5d';
-    var client_secret = '7fe4fe136fa74f5dacc898c8f57a2d00';
-    // if the button is clicked run the fun function!
+    var form = document.getElementById("title");    
+    
+    // If the button is clicked run the fun function!
     form.onclick = async function fun() {
         // source: https://developer.spotify.com/documentation/general/guides/authorization/client-credentials/
+        // alternate source: https://www.youtube.com/watch?v=SbelQW2JaDQ    
+
         var client_id = '257f4d383a25443a8aa392ed9c24fc5d';
         var client_secret = '7fe4fe136fa74f5dacc898c8f57a2d00';
 
-        // create a post request to generate the token
+        // Create a post request to generate the token
         const token_result = await fetch('https://accounts.spotify.com/api/token', {
             method: 'POST',
             headers: {
@@ -28,7 +25,7 @@ window.onload = function () {
 
         var token = data.access_token;
 
-
+        // Use the generated token to send a get request to spotify's playlist api
         const playlist_result = await fetch('https://api.spotify.com/v1/playlists/37i9dQZF1DWY6tYEFs22tT', {
             method: 'GET',
             headers: { 'Authorization': 'Bearer ' + token }
@@ -37,30 +34,27 @@ window.onload = function () {
         const playlist_data = await playlist_result.json();
 
         var tracks = playlist_data.tracks.items
-        console.log(tracks)
 
-        // Might be redundunt because api likely returns in already popular order will test later on to see if this is true
         tracks = tracks.sort(function (first, second) {
             return second.track.popularity - first.track.popularity;
         });
+        
+    
+        // Take the first 10 most popular tracks
+        var top_ten = tracks.slice(0, 10)
 
-       
-
-        var top_ten = tracks.slice(10)
+        // Store the relevent information only
         var top_ten_trimmed = []
         for (var i = 0; i < 10; i++) {
             top_ten_trimmed.push({ 'name': top_ten[i].track.name, 'artist': top_ten[i].track.artists[0].name, 'date': top_ten[i].added_at })
         }
 
 
-
-        const listOfDicts = top_ten_trimmed;
-
         // gets the headers for the csv file
-        const dictionaryKeys = Object.keys(listOfDicts[0]);
+        const dictionaryKeys = Object.keys(top_ten_trimmed[0]);
 
         // Source: https://stackoverflow.com/questions/63481185/javascript-list-of-dictionariesjson-to-csv
-        const dictValuesAsCsv = listOfDicts.map(dict => (
+        const dictValuesAsCsv = top_ten_trimmed.map(dict => (
             dictionaryKeys.map(key => {
                 if (dict[key].includes(',')) {
                     return `"${dict[key]}"`;
@@ -72,7 +66,9 @@ window.onload = function () {
 
         const csv_data = [dictionaryKeys.join(','), ...dictValuesAsCsv].join('\n');
 
+        // function to download the playlist file
         function download(filename, text) {
+            // create an a tag that downloads, then set a manual click to download the csv, remove it from the html after
             var element = document.createElement('a');
             element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(text));
             element.setAttribute('download', filename);
