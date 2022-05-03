@@ -1,10 +1,10 @@
 window.onload = function () {
 
     // Select the button
-    var form = document.getElementById("title");    
+    var task_1_button = document.getElementById("task_1");    
     
     // If the button is clicked run the fun function!
-    form.onclick = async function fun() {
+    task_1_button.onclick = async function fun() {
         // source: https://developer.spotify.com/documentation/general/guides/authorization/client-credentials/
         // alternate source: https://www.youtube.com/watch?v=SbelQW2JaDQ    
 
@@ -85,5 +85,7 @@ window.onload = function () {
         download("playlist.csv", csv_data);
 
     }
+
+
 
 };
