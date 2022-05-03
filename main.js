@@ -1,4 +1,4 @@
-// Function that generates spotify auth token 
+// Function that generates spotify auth token(API)
 async function get_token() {
     // The client_id and client_secret taken from my spotify app and used to retreive an auth token
     var client_id = '257f4d383a25443a8aa392ed9c24fc5d';
@@ -50,7 +50,7 @@ function display_albums(country_name, albums) {
     document.getElementById("countries").innerHTML += table;
 }
 
-// Function to get albums by a given country code
+// Function to get albums by a given country code(API)
 async function get_albums(country_code, token) {
     // Use the generated token to send a get request to spotify's new releases api
     const playlist_result = await fetch('https://api.spotify.com/v1/browse/new-releases?country=' + country_code + '&limit=10', {
@@ -70,6 +70,21 @@ async function get_albums(country_code, token) {
     return trimmed_albums;
 }
 
+// Function to get playlist tracks from spotify(API)
+async function get_playlist(token) {
+     // Use the generated token to send a get request to spotify's playlist api
+     const playlist_result = await fetch('https://api.spotify.com/v1/playlists/37i9dQZF1DWY6tYEFs22tT', {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + token }
+    });
+
+    // Get json representation of the response sent back, wait for the promise to resolve then move on
+    const playlist_data = await playlist_result.json();
+    console.log(playlist_data.tracks.items)
+    return playlist_data.tracks.items;
+    
+}
+
 
 window.onload = async function () {
     // Select the task_1 and task_2 button
@@ -83,17 +98,8 @@ window.onload = async function () {
     // If the task 1 button is clicked run the fun function!
     task_1_button.onclick = async function task_1_fun() {
 
-        // Use the generated token to send a get request to spotify's playlist api
-        const playlist_result = await fetch('https://api.spotify.com/v1/playlists/37i9dQZF1DWY6tYEFs22tT', {
-            method: 'GET',
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
-
-        // Get json representation of the response sent back, wait for the promise to resolve then move on
-        const playlist_data = await playlist_result.json();
-
         // Store the tracks which is an array of the songs in the playlist
-        var tracks = playlist_data.tracks.items;
+        var tracks = await get_playlist(token);
 
         // Order the tracks in descending order by popularity where the highest number is the most popular song
         tracks = tracks.sort(function (first, second) {
@@ -106,7 +112,7 @@ window.onload = async function () {
         // Store the relevent information only
         var top_ten_trimmed = [];
         for (var i = 0; i < 10; i++) {
-            top_ten_trimmed.push({ 'name': top_ten[i].track.name, 'artist': top_ten[i].track.artists[0].name, 'date': top_ten[i].added_at });
+            top_ten_trimmed.push({ 'name': top_ten[i].track.name, 'artist': top_ten[i].track.artists[0].name, 'date': top_ten[i].added_at, 'explicit': top_ten[i].track.explicit.toString(), 'duration(ms)': top_ten[i].track.duration_ms.toString()});
         }
 
         // Set the headers for the csv file
