@@ -1,25 +1,3 @@
-// Function that generates spotify auth token(API)
-async function get_token() {
-    // The client_id and client_secret taken from my spotify app and used to retreive an auth token
-    var client_id = '257f4d383a25443a8aa392ed9c24fc5d';
-    var client_secret = '7fe4fe136fa74f5dacc898c8f57a2d00';
-
-    // Create a post request to generate the token
-    const token_result = await fetch('https://accounts.spotify.com/api/token', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': 'Basic ' + btoa(client_id + ':' + client_secret)
-        },
-        body: 'grant_type=client_credentials'
-    });
-
-    // Get json representation of the response sent back, wait for the promise to resolve then move on
-    const data = await token_result.json();
-    // Now just store the token
-    return data.access_token;
-}
-
 // Function to download the playlist file
 function download(filename, text) {
     // create an a tag that downloads, then set a manual click to download the csv, remove it from the html after
@@ -48,6 +26,28 @@ function display_albums(country_name, albums) {
     });
     table += "</table></div>";
     document.getElementById("countries").innerHTML += table;
+}
+
+// Function that generates spotify auth token(API)
+async function get_token() {
+    // The client_id and client_secret taken from my spotify app and used to retreive an auth token
+    var client_id = '257f4d383a25443a8aa392ed9c24fc5d';
+    var client_secret = '7fe4fe136fa74f5dacc898c8f57a2d00';
+
+    // Create a post request to generate the token
+    const token_result = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Basic ' + btoa(client_id + ':' + client_secret)
+        },
+        body: 'grant_type=client_credentials'
+    });
+
+    // Get json representation of the response sent back, wait for the promise to resolve then move on
+    const data = await token_result.json();
+    // Now just store the token
+    return data.access_token;
 }
 
 // Function to get albums by a given country code(API)
@@ -80,7 +80,6 @@ async function get_playlist(token) {
 
     // Get json representation of the response sent back, wait for the promise to resolve then move on
     const playlist_data = await playlist_result.json();
-    console.log(playlist_data.tracks.items)
     return playlist_data.tracks.items;
     
 }
@@ -118,7 +117,6 @@ window.onload = async function () {
         // Set the headers for the csv file
         const dictionaryKeys = Object.keys(top_ten_trimmed[0]);
 
-        // Source: https://stackoverflow.com/questions/63481185/javascript-list-of-dictionariesjson-to-csv
         const dictValuesAsCsv = top_ten_trimmed.map(dict => (
             dictionaryKeys.map(key => {
                 if (dict[key].includes(',')) {
