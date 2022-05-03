@@ -37,9 +37,8 @@ function download(filename, text) {
 
 // Function that just inserts the html code to display the table using the country_name and the list of albums
 function display_albums(country_name, albums) {
-
     var table = '<div><h3>' + country_name + '</h3><table border="2">';
-    table += '<tr><th>ID</th><th>Name</th><th>Release Date</th></tr>';
+    table += '<tr><th>Name</th><th>Artist</th><th>Release Date</th></tr>';
     albums.forEach((albums, index) => {
         table = table + '<tr>';
         table = table + '<td>' + albums.name + '</td>';
@@ -49,7 +48,6 @@ function display_albums(country_name, albums) {
     });
     table += "</table></div>";
     document.getElementById("countries").innerHTML += table;
-
 }
 
 // Function to get albums by a given country code
@@ -73,9 +71,7 @@ async function get_albums(country_code, token) {
 }
 
 
-
 window.onload = async function () {
-
     // Select the task_1 and task_2 button
     var task_1_button = document.getElementById("task_1");
     var task_2_button = document.getElementById("task_2");
@@ -131,12 +127,10 @@ window.onload = async function () {
 
         // Start file download.
         download("playlist.csv", csv_data);
-
     }
 
     // If the task 2 button is clicked run this fun function
     task_2_button.onclick = async function task_2_fun() {
-
         // Get the list of albums in [{artist, date, name}] format
         var canada_albums = await get_albums("CA", token);
         var pakistan_albums = await get_albums("PK", token);
@@ -149,10 +143,6 @@ window.onload = async function () {
         display_albums("Canada", canada_albums);
         display_albums("Pakistan", pakistan_albums);
         display_albums("France", france_albums);
-
-
     }
-
-
 
 };
