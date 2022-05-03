@@ -3,3 +3,7 @@ body {
     margin-right: auto;
     width: 40%;
 }
+
+td, th {
+    border: 1px solid;
+}

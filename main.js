@@ -1,29 +1,67 @@
-window.onload = function () {
+async function get_token() {
+    // The client_id and client_secret taken from my spotify app and used to retreive a auth token
+    var client_id = '257f4d383a25443a8aa392ed9c24fc5d';
+    var client_secret = '7fe4fe136fa74f5dacc898c8f57a2d00';
 
-    // Select the button
-    var task_1_button = document.getElementById("task_1");    
-    
-    // If the button is clicked run the fun function!
+    // Create a post request to generate the token
+    const token_result = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Basic ' + btoa(client_id + ':' + client_secret)
+        },
+        body: 'grant_type=client_credentials'
+    });
+
+    // Get json representation of the response sent back, wait for the promise to resolve then move on
+    const data = await token_result.json();
+    // Now just store the token
+    return data.access_token;
+}
+
+// function to download the playlist file
+function download(filename, text) {
+    // create an a tag that downloads, then set a manual click to download the csv, remove it from the html after
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', filename);
+
+    element.style.display = 'none';
+    document.body.appendChild(element);
+
+    element.click();
+
+    document.body.removeChild(element);
+}
+
+async function get_albums(country_code, token) {
+    // Use the generated token to send a get request to spotify's new releases api
+    const playlist_result = await fetch('https://api.spotify.com/v1/browse/new-releases?country=' + country_code + '&limit=10', {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + token }
+    });
+
+    // Get json representation of the response sent back, wait for the promise to resolve then move on
+    const album_data = await playlist_result.json();
+
+    return album_data.albums.items
+
+}
+
+
+
+window.onload = async function () {
+
+    // Select the task_1 and task_2 button
+    var task_1_button = document.getElementById("task_1");
+    var task_2_button = document.getElementById("task_2");
+
+
+    // Generate and store the token
+    var token = await get_token()
+
+    // If the task 1 button is clicked run the fun function!
     task_1_button.onclick = async function fun() {
-        // source: https://developer.spotify.com/documentation/general/guides/authorization/client-credentials/
-        // alternate source: https://www.youtube.com/watch?v=SbelQW2JaDQ    
-
-        var client_id = '257f4d383a25443a8aa392ed9c24fc5d';
-        var client_secret = '7fe4fe136fa74f5dacc898c8f57a2d00';
-
-        // Create a post request to generate the token
-        const token_result = await fetch('https://accounts.spotify.com/api/token', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Authorization': 'Basic ' + btoa(client_id + ':' + client_secret)
-            },
-            body: 'grant_type=client_credentials'
-        });
-
-        const data = await token_result.json();
-
-        var token = data.access_token;
 
         // Use the generated token to send a get request to spotify's playlist api
         const playlist_result = await fetch('https://api.spotify.com/v1/playlists/37i9dQZF1DWY6tYEFs22tT', {
@@ -31,15 +69,17 @@ window.onload = function () {
             headers: { 'Authorization': 'Bearer ' + token }
         });
 
+        // Get json representation of the response sent back, wait for the promise to resolve then move on
         const playlist_data = await playlist_result.json();
 
+        // Store the tracks which is an array of the songs in the playlist
         var tracks = playlist_data.tracks.items
 
+        // Order the tracks in descending order by popularity where the highest number is the most popular song
         tracks = tracks.sort(function (first, second) {
             return second.track.popularity - first.track.popularity;
         });
-        
-    
+
         // Take the first 10 most popular tracks
         var top_ten = tracks.slice(0, 10)
 
@@ -49,15 +89,14 @@ window.onload = function () {
             top_ten_trimmed.push({ 'name': top_ten[i].track.name, 'artist': top_ten[i].track.artists[0].name, 'date': top_ten[i].added_at })
         }
 
-
-        // gets the headers for the csv file
+        // Set the headers for the csv file
         const dictionaryKeys = Object.keys(top_ten_trimmed[0]);
 
         // Source: https://stackoverflow.com/questions/63481185/javascript-list-of-dictionariesjson-to-csv
         const dictValuesAsCsv = top_ten_trimmed.map(dict => (
             dictionaryKeys.map(key => {
                 if (dict[key].includes(',')) {
-                    return `"${dict[key]}"`;
+                    return '"${dict[key]}"';
                 }
 
                 return dict[key];
@@ -66,23 +105,38 @@ window.onload = function () {
 
         const csv_data = [dictionaryKeys.join(','), ...dictValuesAsCsv].join('\n');
 
-        // function to download the playlist file
-        function download(filename, text) {
-            // create an a tag that downloads, then set a manual click to download the csv, remove it from the html after
-            var element = document.createElement('a');
-            element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(text));
-            element.setAttribute('download', filename);
-
-            element.style.display = 'none';
-            document.body.appendChild(element);
-
-            element.click();
-
-            document.body.removeChild(element);
-        }
-
         // Start file download.
         download("playlist.csv", csv_data);
+
+    }
+
+    task_2_button.onclick = async function fun() {
+
+        var canada_albums = await get_albums("CA", token);
+        var pakistan_albums = await get_albums("PK", token);
+        var france_albums = await get_albums("FR", token);
+
+        var canada_names = [];
+        var pakistan_names = [];
+        var france_names = [];
+
+        for (var i = 0; i < 10; i++) {
+            canada_names.push({ "name": canada_albums[i].name, "artist": canada_albums[i].artists[0].name, "release date": canada_albums[i].release_date })
+        }
+
+        let table = '<table border="2">';
+        table += '<tr><th>ID</th><th>Name</th><th>Rank</th></tr>';
+        canada_names.forEach((canada_names, index) => {
+            console.log(canada_names.name)
+            table = table + '<tr>';
+            table = table + '<td>'+ canada_names.name+'</td>';
+            table = table + '<td>'+ canada_names.artist+'</td>';
+            table = table + '<td>'+ canada_names["release date"]+'</td>';
+            table += '</tr>';
+        });
+        table += "</table>";
+        document.getElementById("movies-list").innerHTML += table;
+
 
     }
 
